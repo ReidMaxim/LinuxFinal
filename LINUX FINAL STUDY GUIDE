@@ -1,0 +1,306 @@
+============================================================
+LINUX FINAL STUDY GUIDE
+============================================================
+
+============================================================
+TABLE_OF_CONTENTS
+============================================================
+
+01 ENVIRONMENT_VARIABLES
+02 ALIASES (TEMPORARY & PERMANENT)
+03 PROCESSES (KILL / KILLALL / PKILL)
+04 BASH_SCRIPTS (VARIABLES + IF + LOOPS + OPERATORS)
+05 PROCESS_TREE (PSTREE / PS)
+06 CRON_JOBS
+07 SYSTEMD_SERVICES
+08 JOURNALCTL_LOGGING
+09 BOOT_PROCESS (UEFI → GNOME)
+10 FILE_REDIRECTION & OUTPUT_CONTROL
+
+============================================================
+ENVIRONMENT_VARIABLES
+============================================================
+
+Environment variables store values used by the shell and programs.
+
+-- Temporary variable (session only)
+export VAR_NAME="value"
+
+Example:
+export greeting="Hello World!"
+
+Check:
+echo $greeting
+
+-- Permanent user variable
+Stored in:
+~/.bashrc
+
+Add:
+export VAR_NAME="value"
+
+Reload:
+source ~/.bashrc
+
+-- System-wide variables
+/etc/environment
+/etc/profile
+/etc/profile.d/
+
+-- Output redirect
+echo $VAR > file.txt
+
+
+============================================================
+ALIASES (TEMPORARY & PERMANENT)
+============================================================
+
+Aliases are shortcuts for commands.
+
+-- Temporary alias
+alias please='sudo'
+
+-- Permanent (user-level)
+Edit:
+~/.bashrc
+
+Add:
+alias please='sudo'
+
+Reload:
+source ~/.bashrc
+
+-- System-wide aliases
+/etc/bash.bashrc
+/etc/profile.d/*.sh
+
+-- Check alias
+type please
+
+
+============================================================
+PROCESSES (KILL / KILLALL / PKILL)
+============================================================
+
+-- kill (PID based)
+kill PID
+kill -9 PID
+
+Signals:
+15 = SIGTERM (default)
+9 = SIGKILL (force)
+
+-- killall (name based exact match)
+killall process
+killall -9 process
+killall -i process
+
+-- pkill (pattern based)
+pkill name
+pkill -f script.py
+pkill -u user
+
+-- Differences
+kill = PID
+killall = exact name
+pkill = pattern match
+
+
+============================================================
+BASH_SCRIPTS (VARIABLES + IF + LOOPS + OPERATORS)
+============================================================
+
+-- Variables
+var="value"
+
+-- If statement
+if [ condition ]
+then
+  command
+fi
+
+-- If / elif
+if [ condition ]
+then
+  command
+elif [ condition ]
+then
+  command
+else
+  command
+fi
+
+-- Numeric comparisons
+-eq equal
+-ne not equal
+-gt greater than
+-lt less than
+
+-- Loop (while)
+while [ condition ]
+do
+  command
+done
+
+-- Operators
+&& run if previous succeeds
+|| run if previous fails
+
+Example:
+[ $x -eq 3 ] && echo "match"
+
+-- Redirect output
+./script.sh > output.txt
+
+
+============================================================
+PROCESS_TREE (PSTREE / PS)
+============================================================
+
+-- View process tree
+pstree
+pstree -p
+pstree -ap
+
+-- Alternative
+ps axjf
+ps -ejH
+
+-- Redirect output
+pstree -p > tree.txt
+
+
+============================================================
+CRON_JOBS
+============================================================
+
+Cron format:
+MIN HOUR DOM MON DOW COMMAND
+
+-- Edit cron
+crontab -e
+
+-- List cron jobs
+crontab -l
+
+-- Example (12:30 daily)
+30 12 * * * /path/script.sh
+
+IMPORTANT: always use full path
+
+-- Debug tip
+/home/user/script.sh
+
+
+============================================================
+SYSTEMD_SERVICES
+============================================================
+
+-- Start service
+systemctl start service
+
+-- Enable at boot
+systemctl enable service
+
+-- Status
+systemctl status service
+
+-- Reload systemd
+systemctl daemon-reload
+
+Common services:
+sshd
+gdm
+cron
+networking
+
+
+============================================================
+JOURNALCTL_LOGGING
+============================================================
+
+-- View logs
+journalctl
+
+-- Live logs
+journalctl -f
+
+-- Boot logs
+journalctl -b
+journalctl -b -1
+
+-- Service logs
+journalctl -u service
+
+-- Errors only
+journalctl -p err
+
+-- Time filter
+journalctl --since "1 hour ago"
+
+-- Redirect logs
+journalctl -u sshd > logs.txt
+
+
+============================================================
+BOOT_PROCESS (UEFI → GNOME)
+============================================================
+
+UEFI → Bootloader → Kernel → initramfs (dracut) → systemd → gdm → GNOME
+
+-- UEFI
+hardware init + boot selection
+
+-- Bootloader
+loads kernel + initramfs
+
+-- dracut/initramfs
+temporary root filesystem
+
+-- Kernel
+hardware + system initialization
+
+-- systemd
+PID 1, manages services
+
+-- gdm
+login screen
+
+-- GNOME
+desktop environment
+
+
+============================================================
+FILE_REDIRECTION & OUTPUT_CONTROL
+============================================================
+
+-- Redirect output
+command > file.txt
+
+-- Append output
+command >> file.txt
+
+-- Redirect errors + output
+command > file.txt 2>&1
+
+Example:
+systemctl status sshd > sctl.txt
+
+
+============================================================
+EXAM STRATEGY
+============================================================
+
+PROCESS → kill / ps / pstree
+AUTOMATION → cron
+SERVICES → systemctl
+LOGS → journalctl
+SCRIPTS → bash + variables + loops
+HARDWARE → /dev / mount / lsblk
+
+Core model:
+COMMAND → PURPOSE → OUTPUT → FILE
+
+============================================================
+END OF STUDY GUIDE
+============================================================
