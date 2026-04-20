@@ -1,0 +1,353 @@
+Question 1: 
+
+Describe how to create the temporary and permanent alias "please" for sudo; the latter at both the user and system level. Create the permanent alias at the user level. Submit your description and any commands use, alongside the modified dot-file. 
+
+My answer: 
+
+for a temp alias: 
+
+alias please='sudo'  
+
+  
+
+permanent alias on user level 
+
+  navigate to ~/.bashrc 
+
+    add this line to the bottom:  
+
+  alias please='sudo' 
+
+  save and exit 
+
+  
+
+reload settings 
+
+  source ~/.bashrc 
+
+  
+
+make permanent alias on system level 
+
+  navigate to /etc/bash.bashrc or /etc/profile or create script in: /etc/profile.d/ 
+
+  
+
+  add to script alias please='sudo' 
+
+============================================== 
+
+Question 2:  
+
+Describe in detail the differences between the kill, killall, and pkill commands, including common flags and arguments for each. Then demonstrate how to terminate a process using killall. Submit your description, alongside the commands you used.   
+
+My answer: 
+
+kill terminates a process using its PID 
+
+common flags include: 
+
+-9 = force kill. 
+
+-l = list all available signal names.  
+
+-2 = interrupt, similar to a ctrl+c in terminal.  
+
+  
+
+killall kills processes by name instead of PID  
+
+  example: killall -9 firefox 
+
+common flags include: 
+
+  -i = prompts for confirmation before terminating.  
+
+  -v =  verbose, provides a report on if the signal was sent to the target.  
+
+  -l = list all available signal names 
+
+  
+
+pkill kills processes by pattern match. 
+
+  common flags include: 
+
+  -x = exact name  
+
+  -u = kill process by user 
+
+  -9 = force kill 
+
+========================================================= 
+
+ 
+
+Question 3: 
+
+Describe how you would set a temporary and permanent environment variable. In the terminal set the temporary environment variable of your choice (you should know a few), and redirect the output to envar.txt.  Submit your description, the commands you used, along with envar.txt as an attachment. 
+
+My answer:  
+
+temp environment variable:  
+
+  export VARIABLENAME=value 
+
+  example: export greeting="Hello Dave!" 
+
+       touch envar.txt    
+
+       echo $greeting > envar.txt 
+
+  
+
+permanent variable:  
+
+  for a single user i would add:  
+
+     export VARIABLE="my_value"  
+
+  to the ~/.bashrc file 
+
+  
+
+for all users system wide i would add:  
+
+   NAME="value" 
+
+to the /etc/enviroment with sudo privilege   
+
+ 
+
+======================================================== 
+
+Question 4:  
+
+Create a novel yet simple bash script which utilizes a shell variable and an if statement. Execute the script and redirect the output to elif.txt. Submit your script with a .txt extensions, alongside elif.txt.  
+
+My answer: 
+
+#!/bin/bash 
+
+  
+
+deserved_testScore=100 
+
+  
+
+read -p "what did i get for a score on my final exam dave? " testScore 
+
+  
+
+if [ "$testScore" -eq "$deserved_testScore" ] 
+
+then 
+
+  echo "you got $deserved_testScore good job champ!" 
+
+else 
+
+  echo "i think you better re-grade that dave! >:(" 
+
+Fi 
+
+ 
+
+Make it executable: 
+
+chmod +x check_score.txt 
+
+Make it executable: 
+
+./check_score.txt 
+
+Redirect Output to elif.txt 
+
+./check_score.txt > elif.txt 
+
+===================================== 
+
+Question 5:  
+
+Redirect a detailed process tree to the tree.txt using the command of your choice. Submit the commands you used, tree.txt.  
+
+ 
+
+my answer:  
+
+i will use pstree to show all running processes in a tree format. (-p as a flag can be used to make it more detailed by showing process tree with PIDS next to each process.)  
+
+  
+
+  to redirect out put to tree.txt  
+
+pstree -p > tree.txt 
+
+ 
+
+============================================== 
+
+ 
+
+ 
+
+ 
+
+Question 6:  
+
+Describe in detail, including the exact commands you would run, how to create a cron job that executes a script named sjc.sh every day at 12:30. Include the crontab entry you would add and any commands used to prepare or verify the job. Submit your description, alongside the commands you used.   
+
+my answer: 
+
+cron format: MIN HOUR DAY MONTH WEEKDAY COMMAND 
+
+create a script touch sjc.sh 
+
+use pwd to confirm absolute path pwd (output) =~/silk/ so absolute path = /home/silk/sjc.sh 
+
+edit cron tab crontab -e 30 12 * * * /home/silk/sjc.sh 
+
+verify cron job crontab -l 
+
+or "systemctl status cron" or "service cron status" 
+
+====================================================== 
+
+Question 7: 
+
+Install preload or ucfw, and enable the respective service using systemd redirecting each output summatively to sctl.txt. Submit the commands you used, alongside sctl.txt. 
+
+ 
+
+My answer:  
+
+create sctl.txt 
+
+  touch sctl.txt 
+
+  
+
+install the package  
+
+  sudo apt install preload -y > sctl.txt 
+
+  
+
+enable then start the service with systemd 
+
+  sudo systemctl enable preload >> sctl.txt 
+
+  sudo systemctl start preload >> sctl.txt 
+
+  
+
+check the service status  
+
+  systemctl status preload >> sctl.txt 
+
+  
+
+use cat sctl.txt between commands to verify it is working.  
+
+================================================================ 
+
+Question 8:  
+
+Create a novel yet simple bash script which utilizes a construct, e.g. && or ||, and a loop, e.g. while. Execute the script and redirect the output to loop.txt. Submit your script with a .txt extensions, alongside loop.txt.   
+
+ 
+
+#!/bin/bash 
+
+Grade=0 
+
+While [ $grade  -le 100 ] 
+
+Do 
+
+Echo “bump that final grade up for me dave! $grade isnt good enough!”  
+
+[ $grade –eq 100 ] && echo “there we go dave! $grade is what i deserve!”  
+
+Grade=$((grade + 10)) 
+
+done	 
+
+============================================================ 
+
+Question 9: 
+
+Describe the Linux boot processes from power on to desktop environment in exacting detail given the following: UEFI, drakut/systemdboot, systemd, gdm/gnome. 
+
+ 
+
+Power is turned on and the CPU begins running the UEFI firmware. 
+
+UEFI checks the hardware, performs startup tests, and searches for a bootable operating system. 
+
+  
+
+Once the correct boot entry is found, UEFI loads the bootloader into memory and hands over control. 
+
+In this case, the bootloader is systemd-boot. 
+
+  
+
+systemd-boot reads its configuration files and displays the available boot options if needed. 
+
+It then loads the Linux kernel and the initial ramdisk (initramfs) into memory. 
+
+  
+
+Control is passed to the Linux kernel. 
+
+The kernel initializes system memory, processors, and hardware devices such as storage, USB, and graphics. 
+
+  
+
+Next, the initramfs created by dracut runs. 
+
+Its job is to prepare the real root filesystem by loading drivers, detecting storage devices, and unlocking encrypted drives if necessary. 
+
+  
+
+After the root filesystem is ready, the system switches to the main operating system environment. 
+
+The systemd init system starts as process ID 1 and begins launching essential background services. 
+
+  
+
+systemd mounts filesystems, starts networking, logging, device management, and other required services. 
+
+It then reaches the graphical target, which starts the display manager. 
+
+  
+
+The display manager used here is GDM (GNOME Display Manager). 
+
+GDM starts the graphical login screen and allows the user to sign in. 
+
+  
+
+After login, GDM launches the GNOME desktop session. 
+
+GNOME starts the desktop shell, panels, settings services, and user applications. 
+
+=================== 
+
+ 
+
+ 
+
+============================================================== 
+
+Question 10:  
+
+Describe in detail how to manage logs using journalctl. Submit your description alongside the commands you would use. 
+
+Note this is an example problem, the exam is likely to give you different specifics. 
+
+ 
+
+ 
