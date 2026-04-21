@@ -281,58 +281,77 @@ Question 9:
 Describe the Linux boot processes from power on to desktop environment in exacting detail given the following: UEFI, drakut/systemdboot, systemd, gdm/gnome. 
 
  
+Power On / UEFI Starts
+The computer powers on and UEFI firmware checks hardware and looks for a bootable device.
 
-Power is turned on and the CPU begins running the UEFI firmware. 
+Bootloader Loads
+UEFI starts systemd-boot, which loads the Linux kernel and initramfs into memory.
 
-UEFI checks the hardware, performs startup tests, and searches for a bootable operating system. 
+Kernel Starts
+The Linux kernel initializes hardware, memory, CPU, and device drivers.
 
-  
+Initramfs / dracut Runs
+dracut loads needed drivers and mounts the real root filesystem.
 
-Once the correct boot entry is found, UEFI loads the bootloader into memory and hands over control. 
+systemd Starts
+The kernel starts systemd (PID 1), which launches system services and targets.
 
-In this case, the bootloader is systemd-boot. 
+Display Manager Starts
+systemd starts GDM, which shows the graphical login screen.
 
-  
+Desktop Environment Loads
+After login, GNOME starts and the desktop becomes ready to use.
 
-systemd-boot reads its configuration files and displays the available boot options if needed. 
 
-It then loads the Linux kernel and the initial ramdisk (initramfs) into memory. 
 
-  
-
-Control is passed to the Linux kernel. 
-
-The kernel initializes system memory, processors, and hardware devices such as storage, USB, and graphics. 
-
-  
-
-Next, the initramfs created by dracut runs. 
-
-Its job is to prepare the real root filesystem by loading drivers, detecting storage devices, and unlocking encrypted drives if necessary. 
 
   
 
-After the root filesystem is ready, the system switches to the main operating system environment. 
 
-The systemd init system starts as process ID 1 and begins launching essential background services. 
 
-  
 
-systemd mounts filesystems, starts networking, logging, device management, and other required services. 
-
-It then reaches the graphical target, which starts the display manager. 
 
   
 
-The display manager used here is GDM (GNOME Display Manager). 
 
-GDM starts the graphical login screen and allows the user to sign in. 
+
+
 
   
 
-After login, GDM launches the GNOME desktop session. 
 
-GNOME starts the desktop shell, panels, settings services, and user applications. 
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
 
 =================== 
 
