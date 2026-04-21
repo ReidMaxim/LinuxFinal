@@ -320,46 +320,9 @@ After login, GNOME starts and the desktop becomes ready to use.
   
 
 
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-=================== 
-
  
 
- 
-
-============================================================== 
+==========================================
 
 Question 10:  
 
@@ -367,6 +330,48 @@ Describe in detail how to manage logs using journalctl. Submit your description 
 
 Note this is an example problem, the exam is likely to give you different specifics. 
 
- 
+ Common journalctl Commands
+
+1. View All Logs
+journalctl
+Displays the entire system journal from oldest to newest.
+
+2. View Most Recent Logs
+journalctl -e
+Jumps to the end of the log (latest entries).
+
+3. Follow Logs in Real Time
+journalctl -f
+Shows new log entries live, similar to tail -f.
+
+4. View Logs for Current Boot
+journalctl -b
+Shows logs since the last boot.
+
+5. View Logs from Previous Boot
+journalctl -b -1
+Shows logs from the previous boot.
+
+6. View Logs for a Specific Service
+journalctl -u sshd
+Shows logs for the sshd service only.
+
+7. Show Errors Only
+journalctl -p err
+Displays only error-level messages.
+
+8. Filter by Time
+journalctl --since today
+journalctl --since "2026-04-21 08:00:00"
+Shows logs after a specific date/time.
+
+9. Disk Usage of Logs
+journalctl --disk-usage
+Shows how much space journal logs are using.
+
+10. Delete Old Logs / Vacuum Logs
+journalctl --vacuum-time=7d
+journalctl --vacuum-size=500M
+Removes logs older than 7 days or keeps logs under 500 MB.
 
  
