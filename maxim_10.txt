@@ -1,0 +1,826 @@
+============================================================
+
+## TABLE_OF_CONTENTS
+
+============================================================
+01 WHAT_IS_A_BOOT_LOADER
+02 GRUB_VS_SYSTEMD_BOOT
+03 WHERE_BOOT_LOADERS_ARE_HEADING
+04 WHAT_IS_A_PARTITION
+05 ACTIVE_PARTITION_BIOS_VS_UEFI_ESP
+06 UEFI_UNIFIED_EXTENSIBLE_FIRMWARE_INTERFACE
+07 SECURE_BOOT_AND_SHIM
+08 BEST_BOOTLOADER_FOR_UEFI_SYSTEMD_BOOT_VS_GRUB
+09 ENTERPRISE_LINUX_BOOTLOADERS
+10 INITRAMFS_AND_SIMPLE_BOOT_FLOW
+11 DRACUT_VS_MKINITRAMFS
+12 INIT_DAEMON_AND_SYSTEMD
+13 INIT_ON_RHEL_UBUNTU_OPENSUSE
+14 FINAL_TAKEAWAY_BOOT_AND_INIT
+15 CRON_COMMAND
+16 CRONTAB_COMMAND
+17 ANACRON_AND_CRON_JOBS
+18 EPOCH_TIME_AND_CRON_EXAMPLE
+19 SYSTEMCTL_AND_SYSTEMD
+20 SYSTEMCTL_CRON_FIREWALL_SERVICES
+21 SYSTEMCTL_MACHINE_AND_FSTRIM
+22 SYSTEMD_EXTRAS_AND_TIMERS_VS_CRON
+23 DISPLAY_SERVERS_X11_WAYLAND
+24 DISPLAY_MANAGER_AND_WINDOW_MANAGER
+25 WINDOW_MANAGER_TYPES_AND_DESKTOPS
+26 DISTRO_DEFAULTS_RHEL_MINT_OPENSUSE
+27 APPLICATION_DEVELOPMENT_FRAMEWORKS
+28 BOOT_SEQUENCE_POST_TO_FIRST_USERSPACE
+
+
+============================================================
+
+## WHAT_IS_A_BOOT_LOADER
+
+============================================================
+
+The first bit of software that runs when you turn on a computer.
+
+Its job is to:
+- get control from firmware ( BIOS / UEFI )
+- locate your operating system
+- load the kernal into memory
+- hands off control so the OS can start
+
+The boot loader is the bridge between firmware and your OS.
+
+Understanding the Linux boot process (Red Hat)
+https://www.redhat.com/sysadmin/linux-boot-process
+
+Linux boot process overview (YouTube)
+https://www.youtube.com/watch?v=YyZU7-X9gYU
+
+GRUB / boot questions (Unix and Linux Stack Exchange)
+https://unix.stackexchange.com/questions/tagged/grub
+
+
+============================================================
+
+## GRUB_VS_SYSTEMD_BOOT
+
+============================================================
+
+Two primary modren Linux bootloaders:
+
+--1) Grub--
+- this is the default on most linux distros
+
+Strengths:
+- Very flexible ( supports tons of filesystems and config types )
+- works with both BIOS and UEFI
+- can boot multiple OS's easily ( dual boot )
+- highly configurable ( scripts, themes, advanced options )
+
+Weakness:
+- complex config file ( grub.cfg )
+- slower than newer boot loaders
+- overkill for simple or lightweight setups
+
+--2) systemd-boot--
+- the modren, minimalist alternative ( used in newer distros like Arch )
+
+Strengths:
+- very simple and clean config file
+- fast boot times
+- designed specifically for UEFI
+- easy to understand
+
+Weakness:
+- only works with UEFI ( no legacy BIOS support )
+- less flexible than grub
+- not ideal for complex multiple boot systems
+
+
+============================================================
+
+## WHERE_BOOT_LOADERS_ARE_HEADING
+
+============================================================
+
+Where are things going for boot loaders?
+
+The trend and shift is moving away from older and more complex systems
+to simpler more standardized UEFI-based booting.
+
+BIOS + MBR style paths still exist on old hardware, but new machines
+lean UEFI + GPT + stricter boot rules.
+
+
+============================================================
+
+## WHAT_IS_A_PARTITION
+
+============================================================
+
+What is a partition?
+
+A partition is a logical division of a physical storage device.
+A partition is a container that holds the filesystem — like a file
+cabinet that holds the labeling and folders that organize papers.
+
+
+============================================================
+
+## ACTIVE_PARTITION_BIOS_VS_UEFI_ESP
+
+============================================================
+
+Active Partition is a bios-era concept.
+
+The active partition is the one marked as bootable, BIOS looks for
+this partition and loads the boot loader from it.
+
+UEFI does not use active partitions — instead it uses a special
+partition called the EFI system partition ( ESP ).
+
+
+============================================================
+
+## UEFI_UNIFIED_EXTENSIBLE_FIRMWARE_INTERFACE
+
+============================================================
+
+What is UEFI ( Unified Extensible Firmware Interface )
+
+This is a modern firmware layer that replaces the old BIOS
+
+- Faster booting
+- GUI support in some cases
+- Better hardware compatibility
+- Built in boot manager
+
+Key differences:
+- Bios: loads bootloader from disk selector ( MBR )
+- UEFI: loads .efi files from a dedicated partition ( ESP )
+
+UEFI understands GPT well and stores boot entries in NVRAM, not just
+one "active" byte on an MBR disk.
+
+UEFI vs BIOS (Red Hat topics page)
+https://www.redhat.com/en/topics/linux/uefi-vs-bios
+
+
+============================================================
+
+## SECURE_BOOT_AND_SHIM
+
+============================================================
+
+Secure Boot: A UEFI feature that allows trusted, signed bootloaders
+to run.
+
+Most out of the box distros normally boot with secure boot enabled
+because they have a signed shim. this raises boot level security but
+stops the loading of manually built kernels, unsigned boot components
+and third party kernal modules.
+
+Distros also support enrolling Machine Owner Keys ( MOK ) if you need
+custom kernels or drivers — check your distro docs.
+
+UEFI Secure Boot guide (Linux Foundation)
+https://wiki.linuxfoundation.org/security/uefi-securboot-guide
+
+
+============================================================
+
+## BEST_BOOTLOADER_FOR_UEFI_SYSTEMD_BOOT_VS_GRUB
+
+============================================================
+
+Best boot loader for UEFI is systemd-boot. it directly uses UEFI
+features
+- no legacy compatibility baggage
+- simple, fast and clean
+
+But Grub is normally more practical in many cases
+- better multi boot
+- works across BIOS + UEFI
+- handles more complex systems
+
+"Best" depends — systemd-boot shines on simple UEFI-only Linux setups;
+GRUB is the usual default when you need BIOS + UEFI, weird layouts,
+or heavy multi-boot.
+
+
+============================================================
+
+## ENTERPRISE_LINUX_BOOTLOADERS
+
+============================================================
+
+Enterprise Linux bootloaders
+
+most enterprise distros are standardized on: Grub ( specifically Grub2 )
+
+used by:
+- Redhat enterprise
+- Ubuntu
+- Suse linux enterprise
+- open Suse
+
+this is the standard because:
+- proven reliability
+- strong multi-boot + recovery support
+- works across BIOS and UEFI environments
+- years of tooling and documentation
+
+Some bleeding edge or minimal installs use systemd-boot but enterprise
+distros stay conservative.
+
+ARM / other arches can use different firmware ( U-Boot etc. ) — GRUB
+is the PC-class story we keep repeating in class.
+
+
+============================================================
+
+## INITRAMFS_AND_SIMPLE_BOOT_FLOW
+
+============================================================
+
+initramfs
+
+initial RAM filesystem is a temporary root file system loaded into
+memory on boot.
+
+Simple boot flow:
+1. firmware ( UEFI / BIOS )
+2. Bootloader ( Grub )
+3. Kernal loads
+4. initramfs runs
+5. real root filesystem is mounted
+6. init system starts
+
+initramfs — what it does:
+- Loads essential drivers ( disk, filesystem, Raid, LVM )
+- Prepares the system to mount real root
+- handles encrypted disks, LVM Volumes and network booting
+- helps a system find root filesystem
+
+Dracut ( upstream docs )
+https://github.com/dracutdevs/dracut
+
+
+============================================================
+
+## DRACUT_VS_MKINITRAMFS
+
+============================================================
+
+These are tools that build the initramfs image. ( initial RAM filesystem )
+These create a temp filesystem that is loaded into memory during boot
+to mount the root filesystem.
+
+Dracut is a modern modular system common in Fedora and openSUSE.
+mkinitramfs is standard on Debian and Ubuntu.
+
+--Dracut--
+
+Used by: Fedora and openSUSE
+
+Strengths:
+- Modular design
+- Event driven ( uses udev )
+- Cleaner architecture ( less hardcoding )
+- Better for complex enterprise setups ( LVM, RAID, Networking )
+
+Weaknesses:
+- Harder to debug manually
+- Less intuitive for beginners
+- Described as more "black box" ( harder to understand the processes
+  happening / not clear and out in the open )
+
+--Mkinitramfs--
+
+Used by Debian/Ubuntu
+
+Strengths:
+- Simple and transparent
+- Easier to customize manually
+- Predictable behavior
+
+Weakness:
+- Less modular than dracut
+- Can include unnecessary components
+- Not as dynamic for complex systems
+
+Rule: use whatever your distro ships.
+
+
+============================================================
+
+## INIT_DAEMON_AND_SYSTEMD
+
+============================================================
+
+What is an init daemon?
+
+The first user space process started by the kernel.
+
+PID 1 ( process id 1... every process is assigned a number )
+
+The job of the init daemon is to:
+- Start all system services
+- Manage processes
+- Handle shutdown/reboot
+- Maintain system state
+
+Two most common init systems.
+
+1. Systemd ( modern standard )
+
+Strengths:
+- Fast parallel startups
+- Dependency based service management
+- Integrated ecosystem ( logging, networking, timers, etc. )
+- Widely adopted
+
+Weakness:
+- Very complex
+- Does too much ( goes against unix philosophy )
+- Harder to debug manually
+
+2. SysVinit ( legacy )
+
+Strengths:
+- Simple and predictable
+- Easy to understand shell scripts
+
+Weakness:
+- Slow ( sequential startup )
+- No dependency awareness
+- Outdated for modern systems
+
+Modern standard: Systemd
+
+systemd basics (YouTube)
+https://www.youtube.com/watch?v=AtEqxkWCTZU
+
+
+============================================================
+
+## INIT_ON_RHEL_UBUNTU_OPENSUSE
+
+============================================================
+
+What major distros use today:
+
+systemd = Red Hat Enterprise, Ubuntu, openSUSE
+
+So all three use systemd as init.
+
+
+============================================================
+
+## FINAL_TAKEAWAY_BOOT_AND_INIT
+
+============================================================
+
+GRUB2 = enterprise standard bootloader
+
+initramfs = temporary system that prepares real boot
+
+dracut vs mkinitramfs = modular vs traditional
+
+systemd = modern init king
+
+Enterprise Linux = conservative, stable, systemd + GRUB
+
+
+============================================================
+
+## CRON_COMMAND
+
+============================================================
+
+What is a cron?
+
+Cron is a time based job scheduler in linux.
+
+It runs in the background as a daemon: cron
+
+Cron executes commands or scripts automatically at scheduled times.
+
+A cron job is a scheduled task managed by cron.
+
+Examples:
+- Backups every night
+- Log cleanup
+- System updates
+- Running scripts periodically
+
+Basic Usage:
+
+You usually dont interact directly with cron much but if you need to
+in terminal:
+
+cron [options]
+
+Common flags:
+-f = run in foreground
+-l = enable LSB-compliant names for /etc/cron.d
+-n = include FQDN in mail subjects
+-L <level> = set logging level
+
+You mostly will be using cron through crontab, not cron itself.
+
+Scheduling tasks with cron (Red Hat)
+https://www.redhat.com/sysadmin/scheduling-tasks-cron
+
+Linux cron / crontab walkthrough (YouTube)
+https://www.youtube.com/watch?v=v952m13p-bU
+
+cron tag (Unix and Linux Stack Exchange)
+https://unix.stackexchange.com/questions/tagged/cron
+
+
+============================================================
+
+## CRONTAB_COMMAND
+
+============================================================
+
+What is the crontab command?
+
+This is how users create and manage cron jobs.
+
+Basic usage:
+
+crontab [options]
+
+-e = edit your crontab
+-l = list current cron jobs
+-r = remove / deletes all scheduled jobs
+-u <user> = manage another users crontab ( root only )
+-i = prompt before deleting
+
+Crontab file format
+
+Minute (0-59) | hour (0-23) | day of month (1-31) | month (1-12) |
+day of the week (0-7) | [command]
+
+Example:
+
+0 2 * * * /home/user/backup.sh
+
+^^^^^ runs everyday at 2:00am ^^^^^
+
+Special shortcuts
+
+@reboot = runs at startup
+@daily = once per day
+@weekly , @monthly, @hourly
+
+
+============================================================
+
+## ANACRON_AND_CRON_JOBS
+
+============================================================
+
+Anacron: anacron is like cron but for machines that arent always on
+
+Cron assumes your system is always running.
+
+But laptops and desktops might be off when a job is scheduled...
+anacron runs missed jobs when the system turns back on. Ensure
+important periodic tasks still happen. In most cases, cron is used for
+servers, and anacron is used for laptops/desktops.
+
+What tasks does cron run at boot?
+
+Log rotation
+Temp file cleanup
+Cache updates
+Package maintenance
+Security checks
+
+Other common cron tasks:
+
+Database backups
+Syncing files
+Monitoring scripts
+Sending reports/emails
+Pulling data from APIs
+Restarting services
+
+
+============================================================
+
+## EPOCH_TIME_AND_CRON_EXAMPLE
+
+============================================================
+
+What is epoch time?
+
+Epoch time = seconds since Jan. 1, 1970.
+
+Cron uses a human readable schedule.... but:
+
+Internally time comparisons rely on system time.
+
+Scripts run by cron often use epoch time for logging, time calculations
+and scheduling logic.
+
+Example of a useful cron job:
+
+"*/10 * * * * /home/silk/scan_wifi.sh >> /home/silk/logs/wifi.log "
+
+Runs every 10 minutes
+Executes your script
+Appends output to a log file
+
+
+============================================================
+
+## SYSTEMCTL_AND_SYSTEMD
+
+============================================================
+
+What is systemctl?
+
+systemctl is the primary command used to control systemd.
+
+Its how you start/stop services
+Enable services at boot
+Check system status
+Control the machine for reboot or shutdown.
+
+Systemd = the init system ( PID 1 )
+
+systemctl = interface to control systemd
+
+systemd manual index (freedesktop)
+https://www.freedesktop.org/software/systemd/man/systemd.index.html
+
+
+============================================================
+
+## SYSTEMCTL_CRON_FIREWALL_SERVICES
+
+============================================================
+
+How systemctl interacts with cron:
+
+Cron runs as a service. Cron is another service managed under systemd.
+To manually launch cron use:
+
+systemctl start crond
+
+Managing cron:
+
+systemctl status crond
+systemctl start crond
+systemctl stop crond
+systemctl enable crond
+
+Core systemctl commands ( services )
+
+systemctl start <service>
+systemctl stop <service>
+systemctl restart <service> ( stop+start )
+systemctl reload <service> ( reloads config without full restart )
+systemctl status <service> ( shows running state, logs, errors )
+systemctl enable <service> ( creates a symlink so it starts automatically )
+systemctl disable <service> ( disables startup on boot )
+systemctl is-enabled <service> ( checks to see if enabled for boot )
+systemctl is-active <service> ( checks to see if service is running )
+
+Firewall control with systemctl:
+
+systemctl start firewalld
+systemctl enable firewalld
+systemctl status firewalld
+
+General syntax:
+
+systemctl [options] command [unit]
+
+Command = action ( start, stop, etc )
+Unit = target ( service, timer, mount, etc )
+
+Useful flags:
+
+--now = enables and starts immediately
+
+"systemctl enable --now crond"
+
+--user = controls user level services instead of system wide
+
+"systemctl --user start myservice"
+
+-t = show only services
+
+"systemctl -t service"
+
+-a = all ( includes inactive units )
+
+"systemctl list-units -a"
+
+mask / unmask / daemon-reload / list-unit-files still apply when you
+need them.
+
+
+============================================================
+
+## SYSTEMCTL_MACHINE_AND_FSTRIM
+
+============================================================
+
+systemctl commands that control the machine itself.
+
+Power off = systemctl poweroff
+System reboot = systemctl reboot
+System suspend = systemctl suspend
+System hibernate = systemctl hibernate
+Rescue mode = systemctl rescue
+Emergency mode = systemctl emergency
+
+systemctl vs legacy commands
+
+Legacy commands:
+shutdown
+reboot
+poweroff
+halt
+
+Which is better?
+
+systemctl is better because it integrates with systemd dependency system
+Cleaner state handling
+More predictable
+Works across services and system states
+
+What is fstrim and what does it do?
+
+fstrim is used for SSD optimization. it tells the SSD which blocks are
+no longer in use. It allows the SSD to: improve performance, reduce wear
+and manage storage efficiently.
+
+Common usage:
+
+fstrim -v /
+
+-v = verbose ( show how much was trimmed )
+-a = trim all mounted filesystems
+
+fstrim service:
+
+Systemd uses timers instead of cron sometimes. fstrim.timer runs once
+per week normally. check it with:
+
+systemctl status fstrim.timer
+
+
+============================================================
+
+## SYSTEMD_EXTRAS_AND_TIMERS_VS_CRON
+
+============================================================
+
+systemd-mount = mount units + automount in a systemd-native way
+( network shares, plug-in disks with ordering ).
+
+Other tools: journalctl, loginctl, systemd timers ( cron-like but
+logged in the journal ).
+
+Create a cron job:
+1. crontab -e
+2. add line with schedule + command
+3. save — live if crond is running
+
+systemd timer version:
+1. write something.service ( what runs )
+2. write something.timer ( OnCalendar=... or OnBootSec=... )
+3. systemctl daemon-reload
+4. systemctl enable --now something.timer
+
+
+============================================================
+
+## DISPLAY_SERVERS_X11_WAYLAND
+
+============================================================
+
+Display server = owns screen + input for apps.
+
+Two big ones on Linux:
+- X11 ( older de facto — X.Org )
+- Wayland ( newer direction )
+
+Why move: better isolation, simpler model, modern compositors.
+Backward compat: XWayland runs many X apps under Wayland.
+
+Wayland intro (freedesktop)
+https://wayland.freedesktop.org/
+
+
+============================================================
+
+## DISPLAY_MANAGER_AND_WINDOW_MANAGER
+
+============================================================
+
+Display manager = login greeter ( GDM, SDDM, LightDM ) — starts
+graphical session.
+
+Window manager = frames, focus, tiling vs stacking, shortcuts.
+
+systemd: graphical.target pulls in display-manager.service
+
+Display server = plumbing; WM = policy on top.
+
+
+============================================================
+
+## WINDOW_MANAGER_TYPES_AND_DESKTOPS
+
+============================================================
+
+WM types:
+- stacking / floating
+- tiling
+- compositing ( effects — often tied to compositor on Wayland )
+
+Common names: i3, sway ( Wayland ), Openbox, awesome, dwm
+
+Desktop environment = WM / shell + panel + settings + apps —
+GNOME, KDE Plasma, XFCE, Cinnamon, MATE.
+
+WM = piece; DE = whole desktop story.
+
+
+============================================================
+
+## DISTRO_DEFAULTS_RHEL_MINT_OPENSUSE
+
+============================================================
+
+Defaults drift every release — check docs.
+
+--RHEL / Fedora Workstation--
+often GNOME line: GDM, Wayland session on current GNOME, Mutter
+does compositor / WM role.
+
+--Linux Mint--
+Cinnamon is the Mint story; X vs Wayland depends on edition/version;
+Mint publishes per-release notes.
+
+--openSUSE KDE--
+Plasma: SDDM + KWin; Wayland sessions more common on newer Plasma.
+
+Do apps "just work" across all three? Mostly for Flatpak / big
+GTK+Qt apps. Packaging differs ( rpm vs deb vs zypper ); old X-only
+edge cases exist on pure Wayland.
+
+
+============================================================
+
+## APPLICATION_DEVELOPMENT_FRAMEWORKS
+
+============================================================
+
+Application Development Framework ( ADF ) = toolkit for GUI apps
+( widgets, dialogs, printing, etc. )
+
+Two most common on Linux:
+- GTK ( GNOME side, lots of apps )
+- Qt ( KDE side, very cross-platform )
+
+Strengths of shared frameworks on Linux:
+- shared system libraries — update once, many apps benefit
+- consistent behavior inside a stack
+- less duplicated UI code
+
+
+============================================================
+
+## BOOT_SEQUENCE_POST_TO_FIRST_USERSPACE
+
+============================================================
+
+Chain from power button to PID 1:
+
+1. POST
+2. firmware — BIOS or UEFI
+3. boot loader — Grub or systemd-boot loads kernel + initramfs
+4. kernel runs — unpacks initramfs, early userspace
+5. initramfs work — drivers, maybe decrypt / assemble storage
+6. switch root — real root mounts
+7. systemd ( or other init ) becomes PID 1 on real root — first
+   long-lived userspace on the final root
+
+Then later: getty, graphical.target, display manager, my session.
+
+How Linux starts ( overview article )
+https://opensource.com/article/18/11/linux-boot-process
+
+
+============================================================
+
+ChatGPT.com used for initial research along with youtube and forum links above.
+Cursor AI used for  formatting.

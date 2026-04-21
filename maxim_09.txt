@@ -1,0 +1,731 @@
+============================================================
+
+## TABLE_OF_CONTENTS
+
+============================================================
+01 IF_ELIF_AND_DECISION_CONSTRUCTS
+02 AND_OR_OPERATORS
+03 FOR_LOOPS
+04 WHILE_LOOP
+05 UNTIL_LOOP
+06 SEQ_COMMAND
+07 EXPR_ARITHMETIC
+08 SHELL_SCRIPT_VS_FUNCTION
+09 FUNCTION_LIBRARY
+10 DEFINING_FUNCTIONS
+11 COMMANDS_VS_FUNCTIONS
+12 INDEXED_ARRAYS
+13 STRING_INTERPOLATION
+14 STRING_MANIPULATION
+15 CASE_STATEMENTS
+16 WHILE_READ_LOOP
+17 ERROR_HANDLING
+18 TRAP_COMMANDS
+19 SIGNALS
+20 EXIT_STATUS
+21 FILE_TEST_OPERATORS
+22 REDIRECTION_AND_PIPING
+23 SCRIPTING_BEST_PRACTICES
+24 SET_E_SET_U
+25 BASH_BUILTINS
+26 DEBUGGING_BASH_SCRIPTS
+
+
+============================================================
+
+## IF_ELIF_AND_DECISION_CONSTRUCTS
+
+============================================================
+
+if, elif are for ordered prioritized choices. Check conditions in order
+and take the first matching action. Based on the binary condition of the
+previous command.
+
+Novel and appropriate uses for decision constructs like if and elif:
+- One of the most basic uses would be checking if something is true or false
+- "if a file exists then echo File name/location"
+- We could build upon this and say "if a file exists echo name/filepath, else create file"
+- You can keep stacking/nesting these together to create more complex tasks
+- Example: "if a file exists, cat file or nano else it doesn't exist prompt user for
+  input on whether they want to create file, if user input = yes then create file"
+
+From Zero To Hero With Bash Scripting (loops, if statements, ~25 min)
+https://www.youtube.com/watch?v=KgA-MnH9Bpw
+
+
+============================================================
+
+## AND_OR_OPERATORS
+
+============================================================
+
+&& and || are best for true or false and are more concise than if/elif
+
+A && B = run B only if A succeeds
+A || B = run B only if A fails
+
+This can be used to expand upon the dynamics of a logical condition.
+
+Examples:
+- mkdir dir && echo created directory. If the directory is created it triggers the echo message
+- Useful in many ways to verify and troubleshoot
+- Use || for error messages or bug fixes
+- touch a file and use "|| echo "error: file not created"" to let you know an action
+  wasn't finished
+
+
+============================================================
+
+## FOR_LOOPS
+
+============================================================
+
+for, while, until. Used when you have a known list or set of items, good
+for processing each file or looping over command line arguments.
+
+--for-- = iterate over a known list
+
+Syntax: for variable in ...; do ...; done
+
+Create/assign variable name. It's set each iteration.
+
+Example:
+
+    for count in a b c; do
+      echo "$count"
+    done
+
+Example with glob expansion:
+
+    for file in *.txt; do
+      echo "Processing: $file"
+    done
+
+What each line does:
+- for file in *.txt; do = expand *.txt to every filename ending with .txt.
+  For each filename, set the variable file and run the loop body.
+- echo "Processing: $file" = print the words Processing: followed by the
+  current filename.
+- done = end the loop.
+
+Behavior examples:
+- If directory has a.txt and b.txt, output: Processing: a.txt Processing: b.txt
+- If there are no .txt files: without nullglob, the shell may run once with
+  file="*.txt" and print: Processing: *.txt
+- To avoid that: enable nullglob (shopt -s nullglob) or check that the file
+  exists before processing.
+
+Bash Scripting Tutorial for Beginners (TechWorld with Nana, ~1hr, practical)
+https://www.youtube.com/watch?v=PNhq_4d-5ek
+
+
+============================================================
+
+## WHILE_LOOP
+
+============================================================
+
+Syntax: while Condition; do commands done
+(Condition and commands are the key parts)
+
+Condition = any command. The loop runs as long as Condition exits with
+status 0 (Success).
+
+The body runs after each successful condition check. When condition
+returns non-zero (failure), the loop stops.
+
+Best used for when you need to loop while a condition remains true, to
+read streams or to wait with retries.
+
+
+============================================================
+
+## UNTIL_LOOP
+
+============================================================
+
+Syntax: until Condition; do commands done
+(Condition and commands are the key parts)
+
+The loop runs while condition returns non-zero (failure). It stops when
+the condition returns 0 (Success). The opposite of while.
+
+When to use until over while: readability when the loop's goal is to
+try until success.
+
+Example:
+
+    i=0
+    until (( i >= 5 )); do
+        echo "$i"
+        ((i++))
+    done
+
+Variable i set to 0. Loop runs until i is greater than or equal to 5.
+Each iteration prints i and increments it. Repeats until i = 5 then
+finishes with done.
+
+
+============================================================
+
+## SEQ_COMMAND
+
+============================================================
+
+--seq-- prints a sequence of numbers
+
+Basic usage:
+- seq Number (prints 1 -> Number you provided)
+- seq first last (prints from first number to last number)
+- seq first increment last (prints from first to last using given increment)
+
+Flags:
+-w = pads numbers with leading zeros ("01, 02, 03")
+-s = separator of choice (changes the separator between numbers)
+
+seq is best used in scripts when you need a quick list of numbers or
+need padded numbers.
+
+
+============================================================
+
+## EXPR_ARITHMETIC
+
+============================================================
+
+--expr-- an external command that does arithmetic.
+
+In modern bash you can do the same but more simply with shell arithmetic.
+But expr is useful to learn since it works in the most basic shells (POSIX).
+
+Shell arithmetic examples:
+
+    num=$((num+1))
+    next=$((num+1))
+
+Scenario: files named report1.txt, report2.txt, report3.txt. Create a copy
+of each with the number increased by 1 (report1.txt -> report2_copy.txt, etc.).
+Use expr to extract the number and add 1.
+
+Script:
+
+    for f in report*.txt; do
+      num=$(expr "$f" : 'report\([0-9][0-9]*\)\.txt')
+      [ -z "$num" ] && continue
+      next=$(expr "$num" + 1)
+      cp -- "$f" "report${next}_copy.txt"
+    done
+
+Line-by-line:
+- for f in report*.txt; do = loop over filenames that start with "report"
+  and end with ".txt"
+- num=$(expr "$f" : 'report\([0-9][0-9]*\)\.txt') = use expr with regex to
+  extract the number part. Example: "report12.txt" -> num becomes "12"
+- [ -z "$num" ] && continue = if no number found (num empty), skip this file
+- next=$(expr "$num" + 1) = add 1 to extracted number, store in next
+- cp -- "$f" "report${next}_copy.txt" = copy original to new filename with
+  incremented number
+
+Result: report1.txt -> report2_copy.txt, report2.txt -> report3_copy.txt,
+report3.txt -> report4_copy.txt
+
+Modern bash alternative: num=${f#report}; num=${num%.txt}; next=$((num + 1))
+
+
+============================================================
+
+## SHELL_SCRIPT_VS_FUNCTION
+
+============================================================
+
+Shell Script: a standalone file of shell commands saved on disk that you
+run as a program. It runs as a new shell process when executed.
+
+Shell Function: a named block of shell commands defined inside an
+interactive shell or inside a script. Calling it runs the commands in
+the current shell (not a new process).
+
+These differ:
+- Script is started by being executed as program vs function that is
+  called by name inside a shell or script
+- Script runs in child shell vs function that runs in current shell
+- A script is used when you want an independent program, reusable
+  executable and a separate environment
+- A function is when you want to reuse logic inside of a shell/session
+  or share state. Allows you to organize large scripts into smaller parts.
+
+
+============================================================
+
+## FUNCTION_LIBRARY
+
+============================================================
+
+A file or set of files that contain reusable shell function definitions
+you can load into shell or scripts so you can call those functions again
+without rewriting them.
+
+- Create a file with your functions then call them using source or dot
+- "source functions.sh" or ". functions.sh"
+- When you use source or . to call a function library file, all functions
+  defined in that file are available
+
+
+============================================================
+
+## DEFINING_FUNCTIONS
+
+============================================================
+
+Generic syntax:
+
+    function name() {
+        echo "I made a function"
+    }
+
+Bash specific syntax:
+
+    function name {
+        commands
+    }
+
+
+============================================================
+
+## COMMANDS_VS_FUNCTIONS
+
+============================================================
+
+The difference between a command and function: a command is an executable
+or builtin you run. A shell function is a user defined block of commands
+executed inside the current shell.
+
+- Running a command usually starts a new process
+- Functions read and modify shell variables, change directories and those
+  changes persist after the function ends
+- Functions do not create any overhead and are faster because there is
+  no new process
+
+
+============================================================
+
+## INDEXED_ARRAYS
+
+============================================================
+
+Declaring and initializing indexed arrays:
+
+Explicit list:
+
+    arr=(apple banana "fruit with spaces")
+
+One by one:
+
+    arr=()
+    arr[0]=apple
+    arr[1]=banana
+    arr[2]="fruit with spaces"
+
+Using indices:
+
+    arr=([0]=zero [2]=two [5]=five)
+
+Common operations:
+- Read element: echo "${arr[1]}"
+- All elements: "${arr[@]}"
+- All indices: "${!arr[@]}"
+- Length (number of elements): "${#arr[@]}"
+- Length of element (character count): "${#arr[1]}"
+- Append: arr+=new item
+
+Iterate:
+
+    for i in "${arr[@]}"; do
+        echo "$i"
+    done
+
+
+============================================================
+
+## STRING_INTERPOLATION
+
+============================================================
+
+Inserting or expanding values or expressions into a string so the final
+text includes those values.
+
+Simple example:
+
+    name=alice
+    echo "hello, $name"
+
+
+============================================================
+
+## STRING_MANIPULATION
+
+============================================================
+
+Manipulating strings in bash: substring extraction and replacement.
+
+Basic variable:
+
+    var="hello world"
+
+Substring extraction:
+- ${var:offset} = from offset to end. ${var:6} -> "world"
+- ${var:offset:length} = specific length. ${var:0:5} -> "hello"
+- Negative offsets (bash): ${var: -5} -> "world" (note space before -5)
+
+Length:
+- ${#var} = length in characters. ${#var} -> 11
+
+Substring removal (prefix/suffix):
+- Remove shortest prefix: ${var#pattern}
+  file="a/b/c.txt"; ${file#*/} -> "b/c.txt"
+- Remove longest prefix: ${var##pattern}
+  ${file##*/} -> "c.txt"
+- Remove shortest suffix: ${var%pattern}
+  fname="file.tar.gz"; ${fname%.*} -> "file.tar"
+- Remove longest suffix: ${var%%pattern}
+  ${fname%%.*} -> "file"
+
+Replacement:
+- Replace first occurrence: ${var/pat/repl}
+  s="one two one"; ${s/one/1} -> "1 two one"
+- Replace all occurrences: ${var//pat/repl}
+  ${s//one/1} -> "1 two 1"
+- Replace prefix only: ${var/#pat/repl}
+- Replace suffix only: ${var/%pat/repl}
+
+Case modification (bash >=4):
+- ${var^} = capitalize first char
+- ${var^^} = to upper case (all)
+- ${var,} = lowercase first char
+- ${var,,} = to lower case (all)
+
+Index/search:
+- ${var%%$sub*} and length math
+- pos=$(expr index "$var" "$sub") = external expr; returns 0 if not found
+
+Safe trimming (whitespace):
+- Parameter expansion (bash-only): trim both:
+  var="${var#"${var%%[![:space:]]}"}"; var="${var%"${var##[![:space:]]}"}"
+- Simpler with sed: var="$(echo -e "$var" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+Concatenation:
+- Place variables next to each other: a="foo"; b="bar"; c="${a}${b}" -> "foobar"
+
+Splitting / arrays:
+- IFS controls word splitting: IFS=',' read -r -a parts <<< "$csv"
+- parts[0], parts[1], ...
+
+Substring to number (arithmetic):
+- num=$(( ${var:2:3} + 1 ))
+
+Quoting and safety:
+- Always quote expansions to preserve spaces: "${var}"
+- Use "${var//search/$replacement}" but escape & in replacement if using sed.
+
+Examples:
+- Extract extension: fname="file.tar.gz"; ext="${fname##*.}" -> "gz"
+- Base name without extension: base="${fname%.*}" -> "file.tar"
+- Replace spaces with underscores: s="a b c"; echo "${s// /_}" -> "a_b_c"
+- Uppercase: name="alice"; echo "${name^}" -> "Alice"
+
+
+============================================================
+
+## CASE_STATEMENTS
+
+============================================================
+
+A case statement is a cleaner, more readable alternative to using a ton
+of if/elif/else.
+
+Syntax:
+
+    case $variable in
+    Pattern1)
+      # code to run
+      ;;
+    Pattern2)
+      # code to run
+      ;;
+    *)
+      # default case (like else)
+      ;;
+    esac
+
+Pattern) = what you're checking
+;; = ends the case block
+* = wildcard (default/catch all)
+
+Case statements are great for CLI menus, command handlers and CLI tools.
+
+
+============================================================
+
+## WHILE_READ_LOOP
+
+============================================================
+
+Using a while loop to read a file line by line. Each iteration, read
+reads the next line from input.txt into line. The body prints it. The
+loop ends when read reaches end of file.
+
+    while IFS= read -r line
+    do
+        echo "$line"
+    done < file.txt
+
+while = loop runs once per line
+IFS = prevents trimming leading/trailing whitespace
+read -r = stops Bash from interpreting backslash
+line = variable holding the current line
+< file.txt = feeds the file into the loop
+
+
+============================================================
+
+## ERROR_HANDLING
+
+============================================================
+
+Error handling in bash is a mix of being defensive upfront and checking
+things as you go.
+
+1. Exit immediately on errors: set -e. Scripts stop as soon as a command
+   fails. Prevents cascading failures. Often paired with -u = error on
+   undefined variables, -o pipefail = catches failures inside pipes.
+
+2. Check exit status ($?). Every command returns a status; 0 = success,
+   non-zero = failure.
+
+Example:
+
+    mkdir test_dir
+    if [ $? -ne 0 ]; then
+        echo "failed to create directory"
+    fi
+
+3. Use || and && for quick handling
+
+Example:
+
+    mkdir test_dir || echo "directory not created"
+
+
+============================================================
+
+## TRAP_COMMANDS
+
+============================================================
+
+--trap-- lets you intercept signals or events and run your own code
+instead of letting the script die. "If this happens, run this code first."
+
+Syntax: trap "COMMANDS" signal
+
+commands = what you want to run
+signal = what you're watching for
+
+Example:
+
+    trap 'echo "Interrupted! Exiting..."; exit' SIGINT
+    while true
+    do
+        echo "Running... (press Ctrl+C to stop)"
+        sleep 1
+    done
+
+
+============================================================
+
+## SIGNALS
+
+============================================================
+
+Common signals you will see:
+
+SIGINT = Ctrl+C
+SIGTERM = termination request
+EXIT = script is ending
+ERR = any command fails
+
+
+============================================================
+
+## EXIT_STATUS
+
+============================================================
+
+Checking exit status of last executed command.
+
+Every command returns an exit status. You can check the most recent one
+with the special variable $?
+
+Useful with: if [ $? -eq 0 ]; then
+
+0 = worked
+non-zero = failed
+
+
+============================================================
+
+## FILE_TEST_OPERATORS
+
+============================================================
+
+How to check if a file exists and whether it's readable or writable.
+
+In bash you check file properties using test operators inside [ ] or [[ ]]
+
+Operators:
+-f = true if exists and is regular file
+-r = true if exists and is readable
+-w = true if exists and is writable
+-e = exists
+-d = is a directory
+-x = executable
+
+Example:
+
+    if [ -f file.txt ]; then
+        echo "file exists"
+    fi
+
+Combined examples:
+
+    if [ -f file.txt ] && [ -r file.txt ] && [ -w file.txt ]
+    if [[ -f "file.txt" && -r "file.txt" && -w "file.txt" ]]
+
+
+============================================================
+
+## REDIRECTION_AND_PIPING
+
+============================================================
+
+Using redirection and piping in bash.
+
+> = send output to a file (overwrite)
+>> = append output to a file (add to bottom of file)
+< = take input from a file
+2> = redirect errors
+&> = redirect both output and errors
+| = piping (connect commands)
+
+Redirection = sends output to a file
+Pipe = send output to another command
+
+
+============================================================
+
+## SCRIPTING_BEST_PRACTICES
+
+============================================================
+
+Creating usable and maintainable scripts:
+
+1. Use a clear structure. Separate variables and functions. Leave space
+   between and use separating lines to end one section and start a new one.
+
+2. Keep file, variable names consistent and clear. Use the same structure
+   so if it comes to guesswork you at least know the structure of the name.
+
+3. Use clear and precise comments. No fluff.
+
+4. Turn useful code into something modular and reusable with functions.
+
+5. Use [[ ]] over [ ]. Double [[ ]] is cleaner and runs smoother in bash scripts.
+
+6. Code small and smart. Work in chunks and test often.
+
+7. Use case for menus over if, elif and else.
+
+Bash Shell Scripting Full Course (ProgrammingKnowledge, ~3.5hr, comprehensive)
+https://www.youtube.com/watch?v=rMpa-VgJ_UQ
+
+
+============================================================
+
+## SET_E_SET_U
+
+============================================================
+
+set -e = exit on error. If any command returns a non-zero exit status it
+exits immediately.
+
+set -u = if you use a variable that isn't named it exits script with an
+error. These help prevent silent errors and helps make bugs obvious
+immediately. Prevents logging or storing incorrect data.
+
+
+============================================================
+
+## BASH_BUILTINS
+
+============================================================
+
+Bash builtins: commands built into the shell itself. They don't require
+a separate program to run. They execute faster because there is no process
+creation. They often manipulate the shell itself.
+
+Examples: cd, echo, pwd, export, unset
+
+Executables: external commands, separate programs on disk (usually in
+/bin, /usr/bin or /usr/local/bin)
+- Shell has to fork a new process to run them
+- Can be any compiled binary or script
+- Often provides system utilities or software functionality
+- Examples: ls, grep, awk, sed, curl
+
+Comparison:
+- Location: Builtins = inside bash. Executable = disk
+- Speed: Builtins = faster (no process). Executable = slower (creates process)
+- Shell effects: Builtins = can affect shell. Executable = usually doesn't
+  affect shell
+- Examples: Builtins = cd, echo, export. Executable = ls, grep, awk
+
+Why this matters: Performance, shell manipulation and portability.
+
+
+============================================================
+
+## DEBUGGING_BASH_SCRIPTS
+
+============================================================
+
+Use set options for debugging:
+
+set -x = prints each command before execution (tracing)
+set -v = prints each line as it's read
+set -e = exits on any command failure
+set -u = errors on undefined variables
+set -o pipefail
+
+You can run a script in debug mode:
+
+bash -x script.sh = trace execution
+bash -v script.sh = show each line as read
+bash -n script.sh = check syntax only, no execution
+
+Additional tips:
+- Use echo statements for tracing
+- Use trap for error reporting
+- Check exit status for commands
+
+shellcheck myscript.sh = finds syntax errors, detects bad practice and
+suggests fixes.
+
+Stack Overflow (bash tag, 14k+ questions)
+https://stackoverflow.com/questions/tagged/bash
+
+Unix and Linux Stack Exchange (bash tag, 26k+ questions, shell-focused)
+https://unix.stackexchange.com/questions/tagged/bash
+
+
+============================================================
+chatgpt.com gpt 5.2 used for research along with youtube and forum links above. 
+Cursor AI used for digitizing paper notes and formatting.

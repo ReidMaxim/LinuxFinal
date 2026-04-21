@@ -1,0 +1,456 @@
+============================================================
+
+## TABLE_OF_CONTENTS
+
+============================================================
+01 STANDARD_INPUT_OUTPUT_AND_ERROR
+02 ENVIRONMENTAL_VARIABLES
+03 MAKING_VARIABLES_PERMANENT
+04 ALIASES
+05 BASH_SCRIPTING
+06 COMMAND_REDIRECTION
+07 COMMAND_PIPE
+08 ECHO_ESCAPE_SEQUENCES
+09 READ_COMMAND
+10 DECISION_CONSTRUCTS
+11 LOGICAL_OPERATORS
+12 LOOP_CONSTRUCTS
+13 SEQ_COMMAND
+14 EXPR_COMMAND
+
+
+============================================================
+
+## STANDARD_INPUT_OUTPUT_AND_ERROR
+
+============================================================
+
+Programs in Linux and Unix-style systems communicate with the
+outside world through three Standard Streams. These are built-in
+channels for communication between programs and the terminal.
+
+Standard Input (stdin)
+Standard Output (stdout)
+Standard Error (stderr)
+
+Example with "cat file.txt":
+- file.txt is the Standard Input (Stdin)
+- The output of cat is printed to the terminal as Standard Output (stdout)
+- If the file doesn't exist or an error occurs, an ERROR MESSAGE = Stderr
+
+Powerful with "|" (pipe): stdout | Stdin
+command1 | command2
+The stdout of one command becomes the Stdin of another.
+
+Linux Crash Course - Data Streams (stdin, stdout & stderr) (YouTube)
+https://www.youtube.com/watch?v=zMKacHGuIHI
+
+============================================================
+
+## ENVIRONMENTAL_VARIABLES
+
+============================================================
+
+Environmental Variables are named values stored by the Shell that
+programs can read.
+
+Common examples: $USER, $HOME, $SHELL
+
+Example: echo $HOME = /home/silk
+
+Creating temporary variables: assign a value directly
+NAME=value
+
+Using variables: put a $ in front of its name to retrieve the value
+$NAME retrieves the Value Set to the Variable.
+
+Curly brackets can be used if you plan on calling the Variable next to text.
+Example: echo ${NAME}123
+
+Scope: These temporary variables are only stored in the Current Shell.
+
+--env--
+list all persistent Variables
+
+--export--
+add a Variable to this list
+"export NAME"
+
+--unset--
+remove a variable from the environment
+"unset NAME"
+
+These Variables are stored in Environment files. Environment files are
+config files that automatically set Variables when a Shell starts.
+
+Common files include:
+/etc/environment (system-wide Variables)
+/etc/profile (System Shell Settings)
+~/.bashrc (user bash config)
+~/.profile (User login Shell Settings)
+
+Setting environment variables in Linux using Bash (Stack Overflow)
+https://stackoverflow.com/questions/234742/setting-environment-variables-in-linux-using-bash
+
+============================================================
+
+## MAKING_VARIABLES_PERMANENT
+
+============================================================
+
+Using export isn't a permanent addition. When you close the terminal,
+logout or reboot, the Variable disappears unless it's stored in a
+config file.
+
+To make a Variable permanent, add it to a Shell Startup file.
+
+To make a Variable permanent for a Single User, a common Config file
+would be ~/.bashrc
+Add: export MyVar='Permanent'
+
+To make something permanent for the whole system, use /etc/environment
+or /etc/profile.
+
+============================================================
+
+## ALIASES
+
+============================================================
+
+An alias is a shortcut to a command in the Shell. This lets you
+replace a long or complex command with something short.
+
+Instead of typing "ls -la" you can create an alias:
+alias ll="ls -la"
+Now you can just type "ll" and it runs "ls -la"
+
+--alias--
+view current list of aliases
+
+--unalias--
+remove an alias
+
+You can use an alias to run a bash script. Instead of typing
+/home/user/Scripts/backup.sh you could:
+alias backup=/home/user/Scripts/backup.sh
+Then just call "backup"
+
+============================================================
+
+## BASH_SCRIPTING
+
+============================================================
+
+Writing a file that contains a series of Shell commands that execute
+automatically.
+
+Bash Scripts are basically automation layers over command line utilities
+(e.g., grep, awk, find, curl). The script chains these tools together
+to perform tasks automatically.
+
+You can use other programs and scripting languages with bash that are
+installed on the System. Bash acts as a controller that orchestrates
+other programs.
+
+--How to Execute a Bash Script--
+
+Two main ways:
+
+1. Call bash directly (works even if file isn't executable):
+bash Script.sh
+
+2. Run the script like a program if the file is executable:
+./Script.sh
+
+--Shebang--
+
+A Shebang is a collection of characters at the beginning of a file that
+tells the interpreter (the System) what interpreter should be used to
+run the Script.
+
+Examples:
+#!/bin/bash
+#!/usr/bin/python3
+#!/bin/sh
+
+Bash Scripting Tutorial for Beginners (YouTube)
+https://www.youtube.com/watch?v=tK9Oc6AEnR4
+
+============================================================
+
+## COMMAND_REDIRECTION
+
+============================================================
+
+Allows you to change where command input or output goes.
+
+Redirection operators:
+> = Send output to a file (overwrite)
+>> = append output to a file
+< = take input from a file
+
+Commands commonly used in redirection: ls, cat, echo, grep, sort
+These all produce a text output and are easily redirected.
+
+Examples:
+ls > file.txt
+date >> today.txt
+echo "hello world" > hello.txt
+who >> user.txt
+
+============================================================
+
+## COMMAND_PIPE
+
+============================================================
+
+Piping is the process of chaining commands together so the output of
+one is the input of another.
+
+Command1 | Command2 = Command 1 output -> Command 2 input
+
+--Command Filter--
+A command that takes input, processes it and then produces a modified output.
+Some common filters include: grep, sort, head, tail
+
+Examples of piping:
+"ls | grep txt" - list all files and grep filters only .txt files
+"ls | wc -l" - count of number of files
+"cat names.txt | sort" - cat reads file and sort sorts it alphabetically
+"cat log.txt | grep Error" - cat outputs log and grep filters the log
+
+============================================================
+
+## ECHO_ESCAPE_SEQUENCES
+
+============================================================
+
+An Echo Escape Sequence is a combination that begins with \ and tells
+the echo command to perform a special action instead of printing the
+characters literally.
+
+You must use the -e flag with the echo command to use escape sequences.
+
+Format: echo -e "text \escape_sequence text"
+
+Common echo escape sequences:
+\n = newline
+\" = double quote
+\a = Alert (bell sound)
+\t = Horizontal tab
+\\ = backslash
+\b = backspace
+\r = carriage return
+
+Examples:
+echo -e "hello\nworld!!"
+echo -e "name\tage"
+echo -e "user:ltsilk\nStatus\tonline"
+
+============================================================
+
+## READ_COMMAND
+
+============================================================
+
+The read command is used in bash to accept input from the user.
+Similar to the input() function in Python.
+
+It takes input from Stdin.
+
+Basic format: read VariableName
+
+Example 1 (Basic read):
+echo "Enter your name!!!"
+read name
+echo "Hello $name"
+
+Flags:
+-p = use read with a prompt
+
+Example 2 (read -p):
+read -p "enter your age: " age
+echo "you are $age years old"
+
+Multiple Variables can be read.
+
+Example 3 (Multiple Variables):
+echo "enter your first and last Name!!"
+read first last
+echo "hello $first $last"
+
+============================================================
+
+## DECISION_CONSTRUCTS
+
+============================================================
+
+Allows a program to choose different actions depending on Conditions.
+In bash this normally means checking if something is true or false.
+The main decision structure in Linux is "if"
+
+Examples of Conditions:
+- is a file present?
+- did a command succeed?
+- is a number greater than another?
+
+Basic Syntax:
+if [ Condition ]
+then
+    Command
+fi
+
+Example:
+#!/bin/bash
+read -p "enter a number: " num
+if [ $num -gt 10 ]
+then
+    echo "number is greater than 10"
+fi
+
+Multiple Conditions using elif (else if):
+if [ Condition ]
+then
+    Commands
+elif [ Condition ]
+then
+    Commands
+else
+    Commands
+fi
+
+Common Comparison operators:
+-eq = equal
+-ne = not equal
+-gt = greater than
+-lt = less than
+-ge = greater or equal
+-le = less or equal
+
+How to use if elif else in bash (Stack Overflow)
+https://stackoverflow.com/questions/68622119/how-to-use-if-elif-else-in-bash
+
+============================================================
+
+## LOGICAL_OPERATORS
+
+============================================================
+
+Logical operators used with commands.
+
+--&& (And)--
+The second command runs only if the first command succeeds.
+Example: mkdir test && cd test
+
+--|| (Or)--
+The second command only runs if the first fails.
+Example: mkdir test || echo "directory already exists!!"
+
+============================================================
+
+## LOOP_CONSTRUCTS
+
+============================================================
+
+Loop Constructs allow a script to repeat commands multiple times.
+Three common loops are: for, while, until.
+
+--for--
+Used when you know how many times you want to loop.
+
+Syntax:
+for Variable in list
+do
+    Command
+done
+
+Example:
+for i in 1 2 3
+do
+    echo "number: $i"
+done
+
+Output:
+number: 1
+number: 2
+number: 3
+
+--while--
+Runs while a condition is true.
+
+Syntax:
+while [ Condition ]
+do
+    Command
+done
+
+Example:
+count=1
+while [ $count -le 5 ]
+do
+    echo "Count: $count"
+    count=$((count+1))
+done
+
+--until--
+Runs until a condition is met.
+
+Syntax:
+until [ Condition ]
+do
+    Command
+done
+
+Example:
+count=1
+until [ $count -gt 5 ]
+do
+    echo "Count: $count"
+    count=$((count+1))
+done
+
+From Zero To Hero With Bash Scripting - Loops and If Statements (YouTube)
+https://www.youtube.com/watch?v=KgA-MnH9Bpw
+
+============================================================
+
+## SEQ_COMMAND
+
+============================================================
+
+The seq command generates a sequence of numbers.
+
+Format: seq start end
+Example: seq 1 5
+
+Example in a for loop:
+for i in $(seq 1 5)
+do
+    echo "Iteration $i"
+done
+
+============================================================
+
+## EXPR_COMMAND
+
+============================================================
+
+The expr command evaluates expressions (mainly arithmetic).
+
+Syntax: expr number operator number
+Example: expr 5 + 3
+
+Example 1 (Variable Arithmetic):
+a=5
+b=3
+result=$(expr $a + $b)
+echo $result
+
+Example 2 (Incrementing a Variable):
+count=1
+count=$(expr $count + 1)
+echo $count
+
+============================================================
+Chatgpt.com used for inital research. youtube and forum links added in from expanded searching/ research
+Cursor AI used for digitizing paper notes and formatting

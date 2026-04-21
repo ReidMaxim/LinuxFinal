@@ -1,0 +1,463 @@
+============================================================
+
+## TABLE_OF_CONTENTS
+
+============================================================
+01 PID_AND_PPID
+02 PARENT_VS_CHILD_AND_DAEMON_PROCESSES
+03 PROCESS_GENEALOGY
+04 ZOMBIE_PROCESSES
+05 PS_COMMAND_AND_PROCESS_LOOKUP
+06 PSTREE_PGREP_TOP
+07 HTOP_KILL_AND_SIGNALS
+08 KILLALL_PKILL_AND_NICENESS
+09 NICE_RENICE_TRAP_LSOF
+10 NOHUP_SHELL_FORKING_FOREGROUND_BACKGROUND
+11 JOB_CONTROL
+12 WATCH_COMMAND
+
+============================================================
+
+## PID_AND_PPID
+
+============================================================
+
+PID = Process ID
+
+a PID is a unique integer assigned by the Kernel to each process while it exists
+
+It helps the Kernel keep track of and manage processes, bookkeeping, scheduling, signaling and resource accounting.
+
+PPID = Parent Process ID
+
+this is the PID of a process's parent. (created via fork or clone).
+
+the Kernel records the parent/child relationship when a process is created.
+
+If a parent exits before a child the child is reparented (normally to PID 1 or a subreaper) and its PPID is updated.
+
+How are they enumerated?
+
+Assigned sequentially by the Kernel
+
+starts at low numbers and increases
+
+when a process exits PIDs can eventually be reused
+
+PID 1 is always special
+
+UNIX Process Relationships: Parent-Child & Process Groups Explained (YouTube)
+https://www.youtube.com/watch?v=JTcf4_rr5QQ
+
+============================================================
+
+## PARENT_VS_CHILD_AND_DAEMON_PROCESSES
+
+============================================================
+
+Parent vs Child Process
+
+A parent process is any process that creates another process using system calls like:
+
+fork: Clones itself
+
+exec: replaces its memory with a new program.
+
+Parent Process:
+
+Creates another process
+
+has its own PID
+
+can monitor and control child
+
+can wait for child to finish (wait())
+
+Child Process:
+
+is created by parent.
+
+gets a new PID and takes parents PID as PPID.
+
+inherits some resources.
+
+executes independently after creation.
+
+What is a daemon Process
+
+a daemon runs as background process that runs independently of a terminal and provides system or service functionality.
+
+things like ssh servers web servers and cron scheduler.
+
+these processes are detached from the user session, often started at boot, runs continuously and PPID often becomes 1 (adopted by init/systemd)
+
+============================================================
+
+## PROCESS_GENEALOGY
+
+============================================================
+
+Process Genealogy
+
+this is the family tree of processes it has a hierarchical structure similar to human families.
+
+Everything can be traced back to PID 1 which is traditionally init or on modern systems systemd.
+
+You can use the pstree or ps command to visualize the process hierarchy in tree form.
+
+Real world flow:
+
+1. Kernel boots
+2. Starts PID1 (systemd or init)
+3. systemd starts services (daemons)
+4. A service like ssh starts
+5. you log in and get a shell (bash)
+6. you run a program and it creates a child process
+
+from init -> user process -> child process
+
+Systemd PID1
+    └─ sshd (200)
+        └─ bash (450)
+            └─ python (900)
+                └─ sub process (950)
+
+============================================================
+
+## ZOMBIE_PROCESSES
+
+============================================================
+
+A zombie process is a process that has finished execution. BUT still has an entry in the process table.
+
+This can happen when a parent hasn't called (wait()) yet to collect the exit status.
+
+When viewed with ps it will show as Z, it uses almost no resources and still holds a PID
+
+Too many zombie processes can begin to fill the process table (this is bad process management)
+
+to fix this either the parent process calls wait() or if the parent process dies, zombie is adopted by PID1 and cleaned up.
+
+Zombie processes (Stack Overflow)
+https://stackoverflow.com/questions/3857575/zombie-processes
+
+============================================================
+
+## PS_COMMAND_AND_PROCESS_LOOKUP
+
+============================================================
+
+PS command (Process snapshot)
+
+PS shows a snapshot of running processes at the moment you run it.
+
+ps = Show current snapshot
+
+-e = Show all processes
+
+-f = Full format (UID, PID, PPID)
+
+BSD-style = ps aux
+
+Using ps to show process tree.
+
+ps -ef --forest
+
+PS is good for quick inspections seeing parent/child relationships and debugging process issues
+
+pidof = returns the pid of a program running by name. Can be used to grab a PID quickly for scripting or killing a process
+
+Example:
+
+pidof firefox
+
+2000
+
+kill $(pidof firefox)
+
+Searching for a process.
+
+Using ps + grep "ps aux | grep python"
+
+Using pgrep "pgrep python"
+
+Using pidof "pidof python" - simple but not as flexible as "pgrep"
+
+============================================================
+
+## PSTREE_PGREP_TOP
+
+============================================================
+
+Pstree and Pgrep
+
+Pstree: Shows processes in a hierarchical tree.
+
+Common Flags:
+
+-p: Show PIDs
+
+-u: Shows username
+
+-a: Shows full command arguments
+
+Pgrep (Process Search tool)
+
+Search for process by name and returns their PIDs.
+
+Flags:
+
+-l: Show process names too.
+
+-f: match full commands
+
+-i: case insensitive
+
+-n: newest process
+
+-o: oldest process
+
+top (realtime process monitor)
+
+Shows a realtime live updating system processes. top shows CPU usage, memory usage, running processes, load average.
+
+Useful Keys for top:
+
+q: quit
+
+k: Kill a process
+
+P: Sort by CPU
+
+M: Sort by Memory.
+
+Can help find resource hogs
+
+Monitor system performance
+
+============================================================
+
+## HTOP_KILL_AND_SIGNALS
+
+============================================================
+
+Htop (better version of top)
+
+a more interactive and user friendly version of top. Htop includes color coded UI, scrollable process list, mouse support, easier filtering/searching.
+
+Useful Commands
+
+F3 Search
+
+F5 tree view
+
+F9 Kill process
+
+F10 Quit
+
+Kill, KillAll and pKill.
+
+All three send signals to processes
+
+Common Signals
+
+SIGTERM (15) = Polite requests to stop
+
+SIGKILL (9) = force kill
+
+SIGSTOP = Pause process
+
+SIGCONT = resume process
+
+Kill = sends a signal to a process using PID, used when you know the exact PID
+
+common flags -SIGTERM, -SIGKILL
+
+-l = list all signals
+
+============================================================
+
+## KILLALL_PKILL_AND_NICENESS
+
+============================================================
+
+killall (by Process name)
+
+Kills processes by name, this kills all matching processes can be dangerous if you're not careful.
+
+Common Flags:
+
+-u = Kill processes owned by user.
+
+-i = interactive (Asks before killing)
+
+PKill (Advanced name based kill)
+
+Like killall, but more powerful and flexible.
+
+Flags:
+
+-f = Match full command.
+
+-U = Kills user processes
+
+-n = Kill newest process
+
+-o = Kills oldest process
+
+PKill uses pattern matching and more control than killall.
+
+niceness (Process Priority)
+
+niceness is a Rating level of a processes willingness to give up cpu/its need for cpu.
+
+-20 = highest prio. least nice
+
+0 = default
+
++19 = Lowest prio (most nice)
+
+Lowest number = aggressive, gets more cpu.
+
+Higher number = Polite, gets less cpu.
+
+Linux Process Tuning Made Easy: Understanding nice and renice (YouTube)
+https://www.youtube.com/watch?v=VjZKvkZQm1U
+
+============================================================
+
+## NICE_RENICE_TRAP_LSOF
+
+============================================================
+
+Changing Niceness
+
+nice = Start a process with priority
+
+example: "nice -n 10 python script.py"
+
+-n 10 = set to a lower priority.
+
+renice = change existing process
+
+example: "renice 10 -p 1234"
+
+-u = change all processes for a user
+
+trap, lsof, nohup (process management tools)
+
+Trap = handles signals in scripts
+
+lets a script catch signals (like ctrl+c) and run custom code.
+
+trap "echo 'cleaning up...'; rm temp.txt" SIGINT
+
+this is useful for preventing messy cleanup, and allows for graceful shutdown
+
+lsof = list what files a process is using
+
+shows files opened by a PID number
+
+lsof -i = show network connections
+
+lsof -p = specific PID
+
+============================================================
+
+## NOHUP_SHELL_FORKING_FOREGROUND_BACKGROUND
+
+============================================================
+
+Nohup
+
+Runs a command immune to hang ups (logout/terminal close)
+
+example "nohup python script.py &"
+
+Keep running even if you disconnect
+
+Useful for long running/background tasks
+
+Shell forking
+
+the Shell creates a new process using fork() when you run a command.
+
+this plays a huge role in multitasking, process isolation and job control
+
+foreground vs background process.
+
+Foreground: Runs in terminal, blocks input until done
+
+Background: Runs behind the scenes, you get your terminal back immediately.
+
+Methods of running a process in the background:
+
+Add &: "python script.py &"
+
+use nohup: nohup python script.py &
+
+& runs a process in the background and nohup prevents the process from dying when terminal is closed.
+
+============================================================
+
+## JOB_CONTROL
+
+============================================================
+
+Suspend and then run in background
+
+Ctrl + Z - pauses process
+
+bg - resumes in background.
+
+Jobs command
+
+Shows background jobs started in your shell. Jobs are shell specific... this does not apply to all system processes just ones you started.
+
+Moving between foreground and background
+
+background to foreground
+
+"fg" without arguments brings forward the most recently backgrounded process or use job ID "fg %1"
+
+foreground to background
+
+Ctrl + Z = Pause
+
+bg = resume in background
+
+============================================================
+
+## WATCH_COMMAND
+
+============================================================
+
+Watch: runs a command repeatedly and shows live output.
+
+Flags
+
+-n = refresh interval
+
+-d = highlight changes
+
+watch is powerful/useful
+
+to monitor processes
+
+" watch -n 1 ps aux"
+
+to monitor disk usage
+
+" watch df -h"
+
+Sysadmins use watch to automate commands and get real time visibility
+
+Linux Crash Course – The "watch" Command (YouTube)
+https://www.youtube.com/watch?v=aSWVwdr2_n8
+
+Repeat a Unix command every x seconds forever (Unix & Linux Stack Exchange)
+https://unix.stackexchange.com/questions/10646/repeat-a-unix-command-every-x-seconds-forever
+
+============================================================
+
+Handwritten notes digitized from IMG_1550.jpeg through IMG_1561.jpeg. Cursor AI used for digitizing paper notes and formatting to match exam notes collection style.

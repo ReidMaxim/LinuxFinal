@@ -1,0 +1,304 @@
+============================================================
+## TABLE_OF_CONTENTS
+============================================================
+01 SYSTEMD_JOURNAL_JOURNALD
+02 ENTERPRISE_JOURNALD_AND_JOURNALCTL
+03 REAL_WORLD_LOG_MONITORING_AND_LOGROTATE
+04 AUTOMATION_STRATEGIES_AND_USERADD
+05 USERMOD_ORG_GROUPS_AND_PASSWD
+06 CHAGE_PASSWORD_POLICY_AND_GROUP_MANAGEMENT
+07 MAINTAINING_GROUP_MEMBERSHIP_AND_AUDITING
+
+============================================================
+## SYSTEMD_JOURNAL_JOURNALD
+============================================================
+Systemd - journal (journal daemon)
+
+systemd includes a component called systemd-journal (often journald). Its a centralized
+logging daemon. It collects logs from the kernel, system services, and applications. It
+stores logs in binary, structured format and provides fast querying, filtering, and metadata
+support.
+
+Journald stores logs in /var/log/journal/. This captures stdout/stderr from services,
+collects kernel logs (like dmesg), adds metadata (UID, PID, service name, boot ID), and
+enables structured filtering (not just a simple text search). Use journalctl to query logs.
+
+Alternatives to journald:
+- rsyslog: traditional text based syslog daemon
+- syslog-ng: advanced syslog daemon (more filter power)
+- logstash (ELK stack): enterprise log aggregation
+- splunk forwarders: proprietary enterprise logging
+
+============================================================
+## ENTERPRISE_JOURNALD_AND_JOURNALCTL
+============================================================
+Do enterprises replace journald
+
+yes and no, not always. Most modern enterprise Linux systems use journald + rsyslog together.
+Normally journald handles local structured logging, and rsyslog forwards logs to SIEM systems
+(splunk, ELK, etc).
+
+Examples of enterprise distros:
+- RHEL/RedHat: journald + rsyslog
+- Ubuntu server: journald + optimal rsyslog
+- Suse: similar hybrid model
+
+Pure replacement of journald is rare. Today normally its layered.
+
+journalctl (core log tool)
+
+command line tool for query journal logs. Use "journalctl" to view logs.
+
+-f = follow logs live
+-u [ServiceName] = logs for a service
+--since, --until = time range
+-b = current boot logs
+-k = kernel logs
+-o json = structured format
+
+combine journalctl with other Linux tools like: grep, awk, sed, sort.
+"journalctl -u sshd -p err | grep "failed""
+
+journalctl (systemd) manual page
+https://www.freedesktop.org/software/systemd/man/latest/journalctl.html
+
+systemd-journald service reference
+https://www.freedesktop.org/software/systemd/man/latest/systemd-journald.service.html
+
+============================================================
+## REAL_WORLD_LOG_MONITORING_AND_LOGROTATE
+============================================================
+Real world example
+
+cron + journald monitoring
+- service failures: journalctl -p err -u nginx
+- repeated auth failures: journalctl | grep "Authentication failure"
+- system crashes or kernel panic: journalctl -k -p crit
+
+example cron alert script:
+journalctl -p err --since "10 minutes ago" | grep -q && echo "error detected"
+
+log prio levels:
+0 = emergency   1 = alert   2 = crit
+3 = err         4 = warning
+5 = notice      6 = info    7 = debug
+
+example usage:
+journalctl -p 3 # error and worse
+
+logrotate (log file management system)
+
+manages log files, size and retention. It rotates logs daily/weekly/monthly, compresses old
+logs, deletes old logs after retention period, and prevents disk full up. This uses either a
+config or a forced rotation.
+
+"logrotate -f /etc/logrotate.conf"
+
+logrotate manual page (man7)
+https://man7.org/linux/man-pages/man8/logrotate.8.html
+
+============================================================
+## AUTOMATION_STRATEGIES_AND_USERADD
+============================================================
+Automation Strategies
+
+Enterprises combine:
+- journald (local logs)
+- logrotate (file logs)
+- cron/systemd timers (automation)
+- SIEM (central monitoring)
+
+User management commands
+
+useradd [userid username]
+- add system entries to etc/passwd
+- assigns UID and GID
+- uses default values from /etc/default/useradd
+
+Common flags:
+-m = create home directory
+-s = set shell
+-G = add to group
+-c = comment or description of user
+-u = set UID
+
+userdel = delete user
+-r = remove home directory
+
+useradd command reference (man7)
+https://man7.org/linux/man-pages/man8/useradd.8.html
+
+============================================================
+## USERMOD_ORG_GROUPS_AND_PASSWD
+============================================================
+usermod = modify existing user
+
+common flags:
+-aG append group membership
+-L lock account
+-U unlock account
+-s change shell
+
+A typical organizational struct.
+dev =
+qa =
+it =
+finance =
+hr =
+training =
+
+these groups can each have access to only files and directories they need.
+
+Crossed out in original:
+These are typical group examples that allow some users to have access to some things
+
+Passwd command! (white users dont only get what you need)
+
+sets or changes passwords
+
+common flags:
+-l = lock password
+-u = unlock
+-e = expire immediately
+-S = status check
+
+============================================================
+## CHAGE_PASSWORD_POLICY_AND_GROUP_MANAGEMENT
+============================================================
+Chage (password aging policy)
+
+used for password expiration... min/max password age
+
+Flags:
+-l = list settings
+-M = max days
+-m = min days
+-W = warning days
+-E = expiration days
+
+example:
+chage -M 90 -W 7 John
+
+Some standard enterprise password policy strategies:
+- 90 day password rotation
+- minimum length
+- complexity rules via PAM
+- lockout after failed attempts
+
+Group management:
+groupadd = create new user group -g = set GID
+groupdel = remove a group
+groupmod = modify the details of a group
+groupmod flags:
+-n = new name
+-g = new GID
+
+chage command reference (man7)
+https://man7.org/linux/man-pages/man1/chage.1.html
+
+============================================================
+## MAINTAINING_GROUP_MEMBERSHIP_AND_AUDITING
+============================================================
+Maintaining Group Memberships & User Privileges (Enterprise Approach)
+
+User privileges are maintained through role-based access control (RBAC), where users are
+assigned to groups (e.g., employee, manager, IT) and permissions are granted to groups rather
+than individuals, ensuring consistency, scalability, and easier auditing.
+
+Automation Script Concept (User Lifecycle Management)
+
+A streamlined script typically handles:
+- Provisioning (add users)
+- Deprovisioning (remove users)
+- Modification (change roles/groups)
+- Monitoring (report access)
+
+Example Bash Script (Simplified)
+#!/bin/bash
+
+ACTION=$1
+ROLE=$2
+USER=$3
+
+case $ACTION in
+  add)
+    if [ "$ROLE" == "employee" ]; then
+      useradd -m -G staff $USER
+    elif [ "$ROLE" == "manager" ]; then
+      useradd -m -G staff,management $USER
+    elif [ "$ROLE" == "it" ]; then
+      useradd -m -G sudo,it $USER
+    fi
+    echo "User $USER added as $ROLE"
+    ;;
+  delete)
+    userdel -r $USER
+    echo "User $USER removed"
+    ;;
+  audit)
+    echo "User groups:"
+    groups $USER
+    echo "Password policy:"
+    chage -l $USER
+    ;;
+  *)
+    echo "Usage: $0 {add|delete|audit} {role} {username}"
+    ;;
+esac
+
+What this script does:
+- Maps roles -> groups
+- Standardizes account creation
+- Provides quick auditing visibility
+- Reduces manual errors
+
+Monitoring & Logging Integration
+
+Combine with logging tools to track changes:
+journalctl -u useradd
+journalctl | grep userdel
+Alert on privilege escalation (e.g., addition to sudo group)
+
+Enterprise Auditing Strategies
+1. Regular Access Reviews
+   Weekly/monthly audits of:
+   - getent passwd
+   - getent group
+   - privileged groups (sudo, wheel)
+   Compare against HR records
+
+2. Privilege Monitoring
+   Alert when users are added to sensitive groups:
+   journalctl --since "1 day ago" | grep "sudo"
+
+3. Inactive Account Detection
+   lastlog | grep "Never logged in"
+
+4. Password & Policy Compliance
+   Enforce with:
+   - chage (expiration)
+   - PAM policies (complexity)
+   Audit:
+   chage -l username
+
+5. Centralized Logging & SIEM
+   Forward logs to:
+   SIEM (Splunk, ELK)
+   Detect:
+   - unusual login times
+   - repeated failures
+   - privilege escalation
+
+6. Least Privilege Enforcement
+   Users get only required access
+   Temporary elevation for admin tasks
+   Remove access immediately on role change
+
+7. Automated Cron Audits
+   Example:
+   0 2 * * * /usr/local/bin/user_audit.sh
+
+   Audit script might:
+   - flag users in sudo
+   - detect inactive accounts
+   - email report
